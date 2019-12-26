@@ -1,0 +1,20 @@
+
+Rule: standart with the borders
+Good - 1434 - 14.3
+Bad - 270 - 2.7
+Neutral - 8296 - 82.9
+
+Rule: prevailing factor
+Good - 652 - 6.52
+Bad - 1090 - 10.9
+Neutral - 8258 - 82.5
+
+Rule: the number of neutrals should be double
+Good - 448 - 4.47
+Bad - 258 - 2.58
+Neutral - 9294 - 92.9
+
+Rule: The negative should not be superior to the positive
+Good - 1326 - 13.2
+Bad - 2088 - 20.8
+Neutral - 6586 - 65.8
