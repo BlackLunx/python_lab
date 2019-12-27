@@ -4,12 +4,16 @@ import pymorphy2
 import string
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import datetime
+
 class appraiser():
     
-    
     def __init__(self, input_file = 'estimations.txt'):
+        import nltk
+        nltk.download("stopwords")
         self.valuation = dict()
         self.morph = pymorphy2.MorphAnalyzer()
+        self.rules = [self.rule1, self.rule2, self.rule3, self.rule4]
         with open(input_file, encoding='utf-8') as f:
             for line in f:
                 word, mark = line.split()
@@ -187,7 +191,6 @@ class appraiser():
         return counter_twits
 
     def generate_rules(self, output_file = 'classifications.txt', input_file = 'in.txt'):
-        self.rules = [self.rule1, self.rule2, self.rule3, self.rule4]
         rules = self.ask_all_rules(input_file)
         self.saved_rules = rules
         names = ['\nRule: standart with the borders\n', '\nRule: prevailing factor\n', '\nRule: the number of neutrals should be double\n', '\nRule: The negative should not be superior to the positive\n']
@@ -261,3 +264,36 @@ class appraiser():
         fig.set_facecolor('floralwhite')
         plt.tight_layout()
         plt.show()    
+    def generate_hrs(self, input_file = 'in.txt', output_file = 'hours'):
+        gap = 30
+        distibuion = [[] for i in range(len(self.rules))]
+        last = None
+        counter = [[0, 0, 0] for i in range(len(self.rules))]
+        first = None
+        with open('new_out.txt', encoding='utf-8') as f:
+            for line in f:
+                if len(line) < 2:
+                    continue
+                current_time = datetime.strptime(re.search(r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}', line)[0], "%Y-%m-%d %H:%M")
+                if first is None:
+                    first = current_time
+                if last is None:
+                    last = current_time
+                diff = current_time - last
+                words = self.hard_work_with_tweet(line[17:])
+                ind = 0 
+                for rule in self.rules:
+                    counter[ind][rule(words)] += 1
+                    ind += 1
+                if diff.seconds > gap * 60:
+                    ind = 0
+                    for rule in self.rules:
+                        distibuion[ind].append([last, counter[ind][:]])
+                        ind += 1
+                    last = current_time
+        for i in range(len(self.rules)):
+            with open(output_file + str(i + 1) + '.txt', 'w', encoding='utf-8') as f:
+                for current_time in distibuion[i]:
+                    if len(current_time[1]) < 3:
+                        print(current_time)
+                    f.write(str(first) + ' - ' + str(current_time[0]) + ' ' + str(current_time[1][0]) + ' ' + str(current_time[1][1]) + ' ' + str(current_time[1][2]) + '\n')
