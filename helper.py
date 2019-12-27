@@ -225,7 +225,7 @@ class appraiser():
         ax.bar(x1, data[0], bar_width, color = 'green', label='Good')
         ax.bar(x2, data[1], bar_width, color = 'red', label='Bad')
         ax.bar(x3, data[2], bar_width, color = 'yellow', label='Neutral')
-        plt.ylabel('Number of twits')
+        plt.ylabel('Number of tweets')
         plt.xlabel('Rules')
         plt.title('Распределение твитов')
         fig.set_figwidth(15)    #  ширина Figure
@@ -250,7 +250,6 @@ class appraiser():
                     y[ind // 6].append(int(current_string[1]))
                 ind += 1    
         fig, axs = plt.subplots(1, 2)
-        x = [int(i) for i in range(1, 6)]
         colors = ['blue', 'orange']
         names = ['Хорошие слова', 'Плохие слова']
         for i in range(2):
@@ -264,13 +263,16 @@ class appraiser():
         fig.set_facecolor('floralwhite')
         plt.tight_layout()
         plt.show()    
-    def generate_hrs(self, input_file = 'in.txt', output_file = 'hours'):
+
+    def generate_hrs(self, input_file = 'reversed_in.txt', output_file = 'hours'):
         gap = 30
-        distibuion = [[] for i in range(len(self.rules))]
+        inter = 10
+        distribution = [[] for i in range(len(self.rules))]
         last = None
         counter = [[0, 0, 0] for i in range(len(self.rules))]
         first = None
-        with open('new_out.txt', encoding='utf-8') as f:
+        first_gap = False
+        with open(input_file, encoding='utf-8') as f:
             for line in f:
                 if len(line) < 2:
                     continue
@@ -285,15 +287,42 @@ class appraiser():
                 for rule in self.rules:
                     counter[ind][rule(words)] += 1
                     ind += 1
+                if not first_gap:
+                    if diff.seconds > inter * 60:
+                        first_gap = True
+                    else:
+                        continue
                 if diff.seconds > gap * 60:
                     ind = 0
                     for rule in self.rules:
-                        distibuion[ind].append([last, counter[ind][:]])
+                        distribution[ind].append([current_time, counter[ind][:]])
                         ind += 1
                     last = current_time
         for i in range(len(self.rules)):
             with open(output_file + str(i + 1) + '.txt', 'w', encoding='utf-8') as f:
-                for current_time in distibuion[i]:
-                    if len(current_time[1]) < 3:
-                        print(current_time)
-                    f.write(str(first) + ' - ' + str(current_time[0]) + ' ' + str(current_time[1][0]) + ' ' + str(current_time[1][1]) + ' ' + str(current_time[1][2]) + '\n')
+                for current_time in distribution[i]:
+                    current_sum = sum(current_time[1])
+                    f.write(str(first) + ' - ' + str(current_time[0]) + ' : ' + str(round(current_time[1][0]/current_sum, 2)) + '/' + str(round(current_time[1][1]/current_sum, 2)) + '/' + str(round(current_time[1][2]/current_sum, 2)) + '\n')
+        self.time_distribution = distribution
+        self.all_tweets = [[] for i in range(len(self.rules))]
+        for i in range(len(self.rules)):
+            for current_time in distribution[i]:
+                self.all_tweets[i].append(sum(current_time[1]))
+    
+    def print_time(self):
+        for i in range(len(self.rules)):
+            date = [str(w[0]) for w in self.time_distribution[i]]
+            dots = [[round(w[1][j] / sum(w[1]), 4) for w in self.time_distribution[i]] for j in range(3)]
+            fig, ax = plt.subplots(2, 1, figsize=(16,10), dpi= 80)
+            ax[0].scatter(x = date, y = dots[0], s = 16, alpha = 0.7)
+            ax[0].scatter(x = date, y = dots[1], s = 16, alpha = 0.7)
+            ax[0].scatter(x = date, y = dots[2], s = 16, alpha = 0.7)
+            ax[0].set_title('Distribution of tweets')
+            ax[0].set_xticklabels(date, rotation=60, fontdict={'horizontalalignment': 'right', 'size':0})
+            ax[0].plot(date, dots[0], date, dots[1], date, dots[2])
+            ax[1].vlines(x=date, ymin = 0, ymax = self.all_tweets[i], color='firebrick', alpha=0.7)
+            ax[1].scatter(x=date, y=self.all_tweets[i], color='firebrick', alpha=0.7)
+            ax[1].set_xticklabels(date, rotation=60, fontdict={'horizontalalignment': 'right', 'size':7})
+            ax[1].set_ylabel('Number of tweets')
+            ax[1].set_xlabel('Time')
+            plt.show()
