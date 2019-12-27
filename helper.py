@@ -313,7 +313,7 @@ class appraiser():
         for i in range(len(self.rules)):
             date = [str(w[0]) for w in self.time_distribution[i]]
             dots = [[round(w[1][j] / sum(w[1]), 4) for w in self.time_distribution[i]] for j in range(3)]
-            fig, ax = plt.subplots(2, 1, figsize=(16,10), dpi= 80)
+            _, ax = plt.subplots(2, 1, figsize=(16,10), dpi= 80)
             ax[0].scatter(x = date, y = dots[0], s = 16, alpha = 0.7)
             ax[0].scatter(x = date, y = dots[1], s = 16, alpha = 0.7)
             ax[0].scatter(x = date, y = dots[2], s = 16, alpha = 0.7)
